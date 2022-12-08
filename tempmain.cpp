@@ -27,7 +27,7 @@ class Piece: public sf::Drawable{//a base class for any chess pieces
     virtual std::size_t get_pts() const {return 0;}
     virtual bool can_move(std::size_t h, std::size_t v) const {return false;}
     virtual bool can_eat(std::size_t h, std::size_t v) const {return false;}
-    virtual std::string get_name() const {return None;}
+    virtual std::string get_name() const {return "None";}
     //methods to draw the sprite
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const {
       target.draw(*sprite, states);
@@ -46,6 +46,8 @@ class Piece: public sf::Drawable{//a base class for any chess pieces
 //------------------------------------------------------------------------------------------------------------------
 class King final : public Piece{
   public:
+    std::string get_name() const{return "King";}
+    King():Piece(){}
     King(std::size_t x, std::size_t y, std::size_t L, bool white, sf::Sprite* sprite):Piece(x, y, L, white, sprite){
       init_sprite();
     }
@@ -62,6 +64,8 @@ class King final : public Piece{
 
 class Queen final : public Piece{
   public:
+    std::string get_name() const{return "Queen";}
+    Queen():Piece(){}
     Queen(std::size_t x, std::size_t y, std::size_t L, bool white, sf::Sprite* sprite):Piece(x, y, L, white, sprite){
       init_sprite();
     }
@@ -80,6 +84,8 @@ class Queen final : public Piece{
 
 class Knight final : public Piece {
   public:
+    std::string get_name() const{return "Knight";}
+    Knight():Piece(){}
     Knight(std::size_t x, std::size_t y, std::size_t L, bool white, sf::Sprite* sprite):Piece(x, y, L, white, sprite){
       init_sprite();
     }
@@ -96,6 +102,8 @@ class Knight final : public Piece {
 
 class Bishop final : public Piece{
   public:
+    std::string get_name() const{return "Bishop";}
+    Bishop():Piece(){}
     Bishop(std::size_t x, std::size_t y, std::size_t L, bool white, sf::Sprite* sprite):Piece(x, y, L, white, sprite){
       init_sprite();
     }
@@ -112,10 +120,12 @@ class Bishop final : public Piece{
 
 class Rook final : public Piece{
   public:
+    std::string get_name() const{return "Rook";}
+    Rook():Piece(){}
     Rook(std::size_t x, std::size_t y, std::size_t L, bool white, sf::Sprite* sprite):Piece(x, y, L, white, sprite){
       init_sprite();
     }
-    static std::size_t get_pts() const {return 5;}
+    std::size_t get_pts() const {return 5;}
     bool can_move(std::size_t h, std::size_t v) const {
       if((h==0) and (v==0)) return false;
       if(h==0) return true;
@@ -129,6 +139,8 @@ class Rook final : public Piece{
 
 class Pawn final : public Piece{
   public:
+    std::string get_name() const{return "Pawn";}
+    Pawn():Piece(){}
     Pawn(std::size_t x, std::size_t y, std::size_t L, bool white, sf::Sprite* sprite):Piece(x, y, L, white, sprite){
       init_sprite();
     }
@@ -163,6 +175,7 @@ class TextureParser{
       else if (f == "Bishop") r = sf::IntRect(48, 0, 16, 32);
       else if (f == "Queen") r = sf::IntRect(64, 0, 16, 32);
       else if (f == "King") r = sf::IntRect(80, 0, 16, 32);
+      else r = sf::IntRect(0, 0, 80, 32);
       return new sf::Sprite(*spritesheet, r);
     }
 };
@@ -184,44 +197,45 @@ class Board: public sf::Drawable{
   public:
 
     template <typename T>
-    void set_piece(std::string name, std::size_t x1, std::size_t y1, bool white){
+    void set_piece(std::size_t x1, std::size_t y1, bool white){
+      std::string name = T().get_name();
       if (white) data[x1-1][y1-1] = T(this->x-L/16+L/8*x1, this->y+L/8*y1, L/8, true , WhiteManager->get_sprite(name));
       else data[x1-1][y1-1] = T(this->x-L/16+L/8*x1, this->y+L/8*y1, L/8, false , BlackManager->get_sprite(name));
     }
 
     virtual void reset(){
-      set_piece<Rook>("Rook", 1, 8, true);
-      set_piece<Knight>("Knight", 2, 8, true);
-      set_piece<Bishop>("Bishop", 3, 8, true);
-      set_piece<Queen>("Queen", 4, 8, true);
-      set_piece<King>("King", 5, 8, true);
-      set_piece<Bishop>("Bishop", 6, 8, true);
-      set_piece<Knight>("Knight", 7, 8, true);
-      set_piece<Rook>("Rook", 8, 8, true);
-      set_piece<Pawn>("Pawn", 0+1, 7, true);
-      set_piece<Pawn>("Pawn", 1+1, 7, true);
-      set_piece<Pawn>("Pawn", 2+1, 7, true);
-      set_piece<Pawn>("Pawn", 3+1, 7, true);
-      set_piece<Pawn>("Pawn", 4+1, 7, true);
-      set_piece<Pawn>("Pawn", 5+1, 7, true);
-      set_piece<Pawn>("Pawn", 6+1, 7, true);
-      set_piece<Pawn>("Pawn", 7+1, 7, true);
-      set_piece<Rook>("Rook", 1, 1, false);
-      set_piece<Knight>("Knight", 2, 1, false);
-      set_piece<Bishop>("Bishop", 3, 1, false);
-      set_piece<Queen>("Queen", 4, 1, false);
-      set_piece<King>("King", 5, 1, false);
-      set_piece<Bishop>("Bishop", 6, 1, false);
-      set_piece<Knight>("Knight", 7, 1, false);
-      set_piece<Rook>("Rook", 8, 1, false);
-      set_piece<Pawn>("Pawn", 0+1, 2, false);
-      set_piece<Pawn>("Pawn", 1+1, 2, false);
-      set_piece<Pawn>("Pawn", 2+1, 2, false);
-      set_piece<Pawn>("Pawn", 3+1, 2, false);
-      set_piece<Pawn>("Pawn", 4+1, 2, false);
-      set_piece<Pawn>("Pawn", 5+1, 2, false);
-      set_piece<Pawn>("Pawn", 6+1, 2, false);
-      set_piece<Pawn>("Pawn", 7+1, 2, false);
+      set_piece<Rook>(1, 8, true);
+      set_piece<Knight>(2, 8, true);
+      set_piece<Bishop>(3, 8, true);
+      set_piece<Queen>(4, 8, true);
+      set_piece<King>(5, 8, true);
+      set_piece<Bishop>(6, 8, true);
+      set_piece<Knight>(7, 8, true);
+      set_piece<Rook>(8, 8, true);
+      set_piece<Pawn>(0+1, 7, true);
+      set_piece<Pawn>(1+1, 7, true);
+      set_piece<Pawn>(2+1, 7, true);
+      set_piece<Pawn>(3+1, 7, true);
+      set_piece<Pawn>(4+1, 7, true);
+      set_piece<Pawn>(5+1, 7, true);
+      set_piece<Pawn>(6+1, 7, true);
+      set_piece<Pawn>(7+1, 7, true);
+      set_piece<Rook>(1, 1, false);
+      set_piece<Knight>(2, 1, false);
+      set_piece<Bishop>(3, 1, false);
+      set_piece<Queen>(4, 1, false);
+      set_piece<King>(5, 1, false);
+      set_piece<Bishop>(6, 1, false);
+      set_piece<Knight>(7, 1, false);
+      set_piece<Rook>(8, 1, false);
+      set_piece<Pawn>(0+1, 2, false);
+      set_piece<Pawn>(1+1, 2, false);
+      set_piece<Pawn>(2+1, 2, false);
+      set_piece<Pawn>(3+1, 2, false);
+      set_piece<Pawn>(4+1, 2, false);
+      set_piece<Pawn>(5+1, 2, false);
+      set_piece<Pawn>(6+1, 2, false);
+      set_piece<Pawn>(7+1, 2, false);
     }
 
     virtual void init_sprites(){
