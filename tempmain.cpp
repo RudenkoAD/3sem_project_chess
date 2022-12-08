@@ -4,6 +4,8 @@
 #include <SFML/Graphics.hpp>
 #include <cstdio>
 
+sf::Sprite* Nullsprite = new sf::Sprite;
+
 //------------------------------------------------------------------------------------------------------------------
 class Piece: public sf::Drawable{//a base class for any chess pieces
   protected:
@@ -12,7 +14,7 @@ class Piece: public sf::Drawable{//a base class for any chess pieces
     std::size_t x=0;                  //
     std::size_t y=0;                  //absolute coordinates of the upper-left corner of the piece
     std::size_t L=0;                  //width of the piece
-    sf::Sprite* sprite=nullptr;       //the texture and sprite of the piece
+    sf::Sprite* sprite = Nullsprite;       //the texture and sprite of the piece
   public:
     void init_sprite(){               //set the origin to the bottom center point and load the picture
       sprite->setPosition(x, y);
@@ -37,6 +39,33 @@ class Piece: public sf::Drawable{//a base class for any chess pieces
       x=x+h*L;
       y=y+v*L;
       sprite->setPosition(x, y);
+    }
+    ~Piece(){
+      if(sprite != Nullsprite) delete sprite;
+    }
+
+    Piece& operator=(Piece& other){
+      is_white=other.is_white;
+      is_dragged=other.is_dragged;
+      x=other.x;
+      y=other.y;
+      L=other.L;
+      if(sprite != Nullsprite) delete sprite;
+      sprite = new sf::Sprite;
+      *sprite = *other.sprite;
+      return *this;
+    }
+
+    Piece& operator=(Piece&& other){
+      is_white=other.is_white;
+      is_dragged=other.is_dragged;
+      x=other.x;
+      y=other.y;
+      L=other.L;
+      if(sprite != Nullsprite) delete sprite;
+      sprite = other.sprite;
+      other.sprite = Nullsprite;
+      return *this;
     }
 };
 //------------------------------------------------------------------------------------------------------------------
@@ -178,6 +207,9 @@ class TextureParser{
       else r = sf::IntRect(0, 0, 80, 32);
       return new sf::Sprite(*spritesheet, r);
     }
+    ~TextureParser(){
+      delete spritesheet;
+    }
 };
 //------------------------------------------------------------------------------------------------------------------
 
@@ -225,7 +257,7 @@ class Board: public sf::Drawable{
       set_piece<Bishop>(3, 1, false);
       set_piece<Queen>(4, 1, false);
       set_piece<King>(5, 1, false);
-      set_piece<Bishop>(6, 1, false);
+      set_piece<Bishop>(6, 1, false); 
       set_piece<Knight>(7, 1, false);
       set_piece<Rook>(8, 1, false);
       set_piece<Pawn>(0+1, 2, false);
@@ -262,6 +294,12 @@ class Board: public sf::Drawable{
           target.draw(data[i][j], states);
         }
       }
+    }
+    ~Board(){
+      delete texture;
+      delete WhiteManager;
+      delete BlackManager;
+      delete sprite;
     }
 };
 //------------------------------------------------------------------------------------------------------------------
