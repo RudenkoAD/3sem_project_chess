@@ -27,7 +27,7 @@ class Piece: public sf::Drawable{//a base class for any chess pieces
     virtual std::size_t get_pts() const {return 0;}
     virtual bool can_move(std::size_t h, std::size_t v) const {return false;}
     virtual bool can_eat(std::size_t h, std::size_t v) const {return false;}
-    virtual std::string get_name() const {return "None";}
+    static std::string get_name() {return "None";}
     //methods to draw the sprite
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const {
       target.draw(*sprite, states);
@@ -46,7 +46,7 @@ class Piece: public sf::Drawable{//a base class for any chess pieces
 //------------------------------------------------------------------------------------------------------------------
 class King final : public Piece{
   public:
-    std::string get_name() const{return "King";}
+    static std::string get_name() {return "King";}
     King():Piece(){}
     King(std::size_t x, std::size_t y, std::size_t L, bool white, sf::Sprite* sprite):Piece(x, y, L, white, sprite){
       init_sprite();
@@ -64,7 +64,7 @@ class King final : public Piece{
 
 class Queen final : public Piece{
   public:
-    std::string get_name() const{return "Queen";}
+    static std::string get_name() {return "Queen";}
     Queen():Piece(){}
     Queen(std::size_t x, std::size_t y, std::size_t L, bool white, sf::Sprite* sprite):Piece(x, y, L, white, sprite){
       init_sprite();
@@ -84,7 +84,7 @@ class Queen final : public Piece{
 
 class Knight final : public Piece {
   public:
-    std::string get_name() const{return "Knight";}
+    static std::string get_name() {return "Knight";}
     Knight():Piece(){}
     Knight(std::size_t x, std::size_t y, std::size_t L, bool white, sf::Sprite* sprite):Piece(x, y, L, white, sprite){
       init_sprite();
@@ -102,7 +102,7 @@ class Knight final : public Piece {
 
 class Bishop final : public Piece{
   public:
-    std::string get_name() const{return "Bishop";}
+    static std::string get_name() {return "Bishop";}
     Bishop():Piece(){}
     Bishop(std::size_t x, std::size_t y, std::size_t L, bool white, sf::Sprite* sprite):Piece(x, y, L, white, sprite){
       init_sprite();
@@ -120,7 +120,7 @@ class Bishop final : public Piece{
 
 class Rook final : public Piece{
   public:
-    std::string get_name() const{return "Rook";}
+    static std::string get_name() {return "Rook";}
     Rook():Piece(){}
     Rook(std::size_t x, std::size_t y, std::size_t L, bool white, sf::Sprite* sprite):Piece(x, y, L, white, sprite){
       init_sprite();
@@ -139,7 +139,7 @@ class Rook final : public Piece{
 
 class Pawn final : public Piece{
   public:
-    std::string get_name() const{return "Pawn";}
+    static std::string get_name() {return "Pawn";}
     Pawn():Piece(){}
     Pawn(std::size_t x, std::size_t y, std::size_t L, bool white, sf::Sprite* sprite):Piece(x, y, L, white, sprite){
       init_sprite();
@@ -198,7 +198,7 @@ class Board: public sf::Drawable{
 
     template <typename T>
     void set_piece(std::size_t x1, std::size_t y1, bool white){
-      std::string name = T().get_name();
+      std::string name = T::get_name();
       if (white) data[x1-1][y1-1] = T(this->x-L/16+L/8*x1, this->y+L/8*y1, L/8, true , WhiteManager->get_sprite(name));
       else data[x1-1][y1-1] = T(this->x-L/16+L/8*x1, this->y+L/8*y1, L/8, false , BlackManager->get_sprite(name));
     }
