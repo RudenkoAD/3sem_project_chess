@@ -10,7 +10,6 @@ sf::Sprite* Nullsprite = new sf::Sprite;
 class Piece: public sf::Drawable{//a base class for any chess pieces
   protected:
     bool is_white=true;               //whether the piece is white or black
-    bool is_dragged=false;            //whether the piece is being dragged by the mouse
     std::size_t x=0;                  //
     std::size_t y=0;                  //absolute coordinates of the upper-left corner of the piece
     std::size_t L=0;                  //width of the piece
@@ -26,6 +25,7 @@ class Piece: public sf::Drawable{//a base class for any chess pieces
     Piece(std::size_t x, std::size_t y, std::size_t L, bool white, sf::Sprite* sprite):x(x), y(y), L(L), is_white(white), sprite(sprite){}
 
     //getters to be overridden
+    virtual bool is_occupied() const {return false;} //returns whether a piece exists, the base class returns false
     virtual std::size_t get_pts() const {return 0;}
     virtual bool can_move(std::size_t h, std::size_t v) const {return false;}
     virtual bool can_eat(std::size_t h, std::size_t v) const {return false;}
@@ -35,18 +35,15 @@ class Piece: public sf::Drawable{//a base class for any chess pieces
       target.draw(*sprite, states);
     }
     //methods to manipulate position
-    void move(std::size_t h, std::size_t v){
-      x=x+h*L;
-      y=y+v*L;
+    void move(std::size_t x, std::size_t y){
       sprite->setPosition(x, y);
     }
-    ~Piece(){
+    virtual ~Piece(){
       if(sprite != Nullsprite) delete sprite;
     }
 
     Piece& operator=(Piece& other){
       is_white=other.is_white;
-      is_dragged=other.is_dragged;
       x=other.x;
       y=other.y;
       L=other.L;
@@ -58,7 +55,6 @@ class Piece: public sf::Drawable{//a base class for any chess pieces
 
     Piece& operator=(Piece&& other){
       is_white=other.is_white;
-      is_dragged=other.is_dragged;
       x=other.x;
       y=other.y;
       L=other.L;
@@ -75,110 +71,117 @@ class Piece: public sf::Drawable{//a base class for any chess pieces
 //------------------------------------------------------------------------------------------------------------------
 class King final : public Piece{
   public:
+    bool is_occupied() const override{return true;}
     static std::string get_name() {return "King";}
     King():Piece(){}
     King(std::size_t x, std::size_t y, std::size_t L, bool white, sf::Sprite* sprite):Piece(x, y, L, white, sprite){
       init_sprite();
     }
     std::size_t get_pts() const {return 0;}
-    bool can_move(std::size_t h, std::size_t v) const {
+    bool can_move(std::size_t h, std::size_t v) const override{
       if(h==0 and v==0) return false;
       if(abs(h)<=1 and abs(v)<=1) return true;
       return false;
     }
-    bool can_eat(std::size_t h, std::size_t v) const {
+    bool can_eat(std::size_t h, std::size_t v) const override{
       return can_move(h,v);
     }
 };
 
 class Queen final : public Piece{
   public:
+    bool is_occupied() const override{return true;}
     static std::string get_name() {return "Queen";}
     Queen():Piece(){}
     Queen(std::size_t x, std::size_t y, std::size_t L, bool white, sf::Sprite* sprite):Piece(x, y, L, white, sprite){
       init_sprite();
     }
     std::size_t get_pts() const {return 9;}
-    bool can_move(std::size_t h, std::size_t v) const {
+    bool can_move(std::size_t h, std::size_t v) const override{
       if(h==0 and v==0) return false;
       if(h==0) return true;
       if(v==0) return true;
       if(abs(h)==abs(v)) return true;
       return false;
     }
-    bool can_eat(std::size_t h, std::size_t v) const {
+    bool can_eat(std::size_t h, std::size_t v) const override{
       return can_move(h,v);
     }
 };
 
 class Knight final : public Piece {
   public:
+    bool is_occupied() const override{return true;}
     static std::string get_name() {return "Knight";}
     Knight():Piece(){}
     Knight(std::size_t x, std::size_t y, std::size_t L, bool white, sf::Sprite* sprite):Piece(x, y, L, white, sprite){
       init_sprite();
     }
     std::size_t get_pts() const {return 3;}
-    bool can_move(std::size_t h, std::size_t v) const {
+    bool can_move(std::size_t h, std::size_t v) const override{
       if((abs(h)==2) and (abs(v)==1)) return true;
       if((abs(h)==1) and (abs(v)==2)) return true;
       return false;
     }
-    bool can_eat(std::size_t h, std::size_t v) const {
+    bool can_eat(std::size_t h, std::size_t v) const override{
       return can_move(h,v);
     }
 };
 
 class Bishop final : public Piece{
   public:
+    bool is_occupied() const override{return true;}
     static std::string get_name() {return "Bishop";}
     Bishop():Piece(){}
     Bishop(std::size_t x, std::size_t y, std::size_t L, bool white, sf::Sprite* sprite):Piece(x, y, L, white, sprite){
       init_sprite();
     }
     std::size_t get_pts() const {return 3;}
-    bool can_move(std::size_t h, std::size_t v) const {
+    bool can_move(std::size_t h, std::size_t v) const override{
       if((h==0) and (v==0)) return false;
       if(abs(h)==abs(v)) return true;
       return false;
     }
-    bool can_eat(std::size_t h, std::size_t v) const {
+    bool can_eat(std::size_t h, std::size_t v) const override{
       return can_move(h,v);
     }
 };
 
 class Rook final : public Piece{
   public:
+    bool is_occupied() const override{return true;}
     static std::string get_name() {return "Rook";}
     Rook():Piece(){}
     Rook(std::size_t x, std::size_t y, std::size_t L, bool white, sf::Sprite* sprite):Piece(x, y, L, white, sprite){
       init_sprite();
     }
     std::size_t get_pts() const {return 5;}
-    bool can_move(std::size_t h, std::size_t v) const {
+    bool can_move(std::size_t h, std::size_t v) const override{
       if((h==0) and (v==0)) return false;
       if(h==0) return true;
       if(v==0) return true;
       return false;
     }
-    bool can_eat(std::size_t h, std::size_t v) const {
+    bool can_eat(std::size_t h, std::size_t v) const override{
       return can_move(h,v);
     }
 };
 
 class Pawn final : public Piece{
   public:
+    bool is_occupied() const override{return true;}
     static std::string get_name() {return "Pawn";}
     Pawn():Piece(){}
     Pawn(std::size_t x, std::size_t y, std::size_t L, bool white, sf::Sprite* sprite):Piece(x, y, L, white, sprite){
       init_sprite();
     }
     std::size_t get_pts()  {return 1;}
-    bool can_move(std::size_t h, std::size_t v) {
-      if((h==1) and (v==0)) return true;
+    bool can_move(std::size_t x, std::size_t y) const override{
+      if((x==0) and (y==-1) and is_white) return true;
+      if((x==0) and (y==1) and (!is_white)) return true;
       return false;
     }
-    bool can_eat(std::size_t h, std::size_t v) {
+    bool can_eat(std::size_t h, std::size_t v) const override{
       if((h==1) and (abs(v)==1)) return true;
       return false;
     }
