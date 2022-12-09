@@ -306,15 +306,15 @@ class Board: public sf::Drawable{
       switch (event.type)
       {
       case sf::Event::MouseButtonPressed:
+        if(!on_this(event)) break;
         if(event.mouseButton.button == sf::Mouse::Left)
         {
-        if(!on_this(event)) break;
         std::size_t new_x = get_x(event);
         std::size_t new_y = get_y(event);
         bool white_color = data[new_x][new_y]->is_white();
         if(data[new_x][new_y]->is_occupied()){
           if (grabbed_x==-1){if(white_is_moving==white_color){grabbed_x = new_x;grabbed_y = new_y;}}
-          else if (data[grabbed_x][grabbed_y]->can_eat(new_x-grabbed_x, new_y-grabbed_y, white_color)){
+          else if (eating_is_ok(grabbed_x, grabbed_y, new_x, new_y)){
             move_piece(grabbed_x, grabbed_y, new_x, new_y);
             grabbed_x = -1;
             grabbed_y = -1;
@@ -323,7 +323,7 @@ class Board: public sf::Drawable{
         }
         else {
           if (grabbed_x==-1) break;
-          if (data[grabbed_x][grabbed_y]->can_move(new_x-grabbed_x, new_y-grabbed_y)){
+          if (moving_is_ok(grabbed_x, grabbed_y, new_x, new_y)){
             move_piece(grabbed_x, grabbed_y, new_x, new_y);
             grabbed_x = -1;
             grabbed_y = -1;
@@ -332,11 +332,49 @@ class Board: public sf::Drawable{
         }
         break;
         }
+        if(event.mouseButton.button == sf::Mouse::Right){
+          grabbed_x = -1;
+          grabbed_y = -1;
+        }
       default:
         break;
       }
     }
     
+    bool eating_is_ok(std::size_t grabbed_x, std::size_t grabbed_y, std::size_t new_x, std::size_t new_y) const{
+      short dx = new_x-grabbed_x;
+      short dy = new_y-grabbed_y;
+      if(!data[grabbed_x][grabbed_y]->can_eat(dx,dy, data[new_x][new_y]->is_white())) return false;
+      if((abs(dx)==2) and (abs(dy)==1)) return true;            //return clauses for when the piece is a knight
+      if((abs(dx)==1) and (abs(dy)==2)) return true;            //#TODO add a parameter that would signify whether che piece can jump over others
+      if((dx==0) and (dy>0)) for(short i=1; i<dy; i++) if(data[grabbed_x][grabbed_y+i]->is_occupied()) return false;
+      if((dx==0) and (dy<0)) for(short i=-1; i>dy; i--) if(data[grabbed_x][grabbed_y+i]->is_occupied()) return false;
+      if((dx>0) and (dy==0)) for(short i=1; i<dx; i++) if(data[grabbed_x+i][grabbed_y]->is_occupied()) return false;
+      if((dx<0) and (dy==0)) for(short i=-1; i>dx; i--) if(data[grabbed_x+i][grabbed_y]->is_occupied()) return false;//covers rook-like moves
+      if((dx>0) and (dy>0)) for(short i=1; i<dy; i++) if(data[grabbed_x+i][grabbed_y+i]->is_occupied()) return false;
+      if((dx<0) and (dy<0)) for(short i=-1; i>dy; i--) if(data[grabbed_x+i][grabbed_y+i]->is_occupied()) return false;
+      if((dx>0) and (dy<0)) for(short i=1; i<dx; i++) if(data[grabbed_x+i][grabbed_y-i]->is_occupied()) return false;
+      if((dx<0) and (dy>0)) for(short i=1; i<dy; i++) if(data[grabbed_x-i][grabbed_y+i]->is_occupied()) return false;
+      return true;
+    }
+
+    bool moving_is_ok(std::size_t grabbed_x, std::size_t grabbed_y, std::size_t new_x, std::size_t new_y) const{
+      short dx = new_x-grabbed_x;
+      short dy = new_y-grabbed_y;
+      if(!data[grabbed_x][grabbed_y]->can_move(dx,dy)) return false;
+      if((abs(dx)==2) and (abs(dy)==1)) return true; return true;            //return clauses for when the piece is a knight
+      if((abs(dx)==1) and (abs(dy)==2)) return true; return true;            //#TODO add a parameter that would signify whether che piece can jump over others
+      if((dx==0) and (dy>0)) for(short i=1; i<dy; i++) if(data[grabbed_x][grabbed_y+i]->is_occupied()) return false;
+      if((dx==0) and (dy<0)) for(short i=-1; i>dy; i--) if(data[grabbed_x][grabbed_y+i]->is_occupied()) return false;
+      if((dx>0) and (dy==0)) for(short i=1; i<dx; i++) if(data[grabbed_x+i][grabbed_y]->is_occupied()) return false;
+      if((dx<0) and (dy==0)) for(short i=-1; i>dx; i--) if(data[grabbed_x+i][grabbed_y]->is_occupied()) return false;//covers rook-like moves
+      if((dx>0) and (dy>0)) for(short i=1; i<dy; i++) if(data[grabbed_x+i][grabbed_y+i]->is_occupied()) return false;
+      if((dx<0) and (dy<0)) for(short i=-1; i>dy; i--) if(data[grabbed_x+i][grabbed_y+i]->is_occupied()) return false;
+      if((dx>0) and (dy<0)) for(short i=1; i<dx; i++) if(data[grabbed_x+i][grabbed_y-i]->is_occupied()) return false;
+      if((dx<0) and (dy>0)) for(short i=1; i<dy; i++) if(data[grabbed_x-i][grabbed_y+i]->is_occupied()) return false;
+      return true;
+    }
+
     bool on_this(sf::Event event){
       return ((event.mouseButton.x>x) and (event.mouseButton.x<(x+L)) and (event.mouseButton.y>y) and (event.mouseButton.y<y+L));
     }
@@ -367,12 +405,33 @@ class Board: public sf::Drawable{
 
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const {
       target.draw(*sprite, states);
+
+      if(grabbed_x!=-1){
+        for (int i=0; i<8; i++){
+          for (int j=0; j<8; j++){
+            if(data[i][j]->is_occupied()) {
+              if(eating_is_ok(grabbed_x, grabbed_y, i, j)){
+                sf::RectangleShape rectangle(sf::Vector2f(L/8, L/8));
+                rectangle.move(x+(i*L/8), y+(j*L/8));
+                target.draw(rectangle);
+              }
+            }
+            else if(moving_is_ok(grabbed_x, grabbed_y, i, j)){
+              sf::RectangleShape rectangle(sf::Vector2f(L/8, L/8));
+              rectangle.move(x+(i*L/8), y+(j*L/8));
+              target.draw(rectangle);
+            }
+          }
+        }
+      }
+
       for (int i=0; i<8; i++){
         for (int j=0; j<8; j++){
           target.draw(*data[i][j], states);
         }
       }
     }
+    
     ~Board(){
       delete texture;
       delete WhiteManager;
