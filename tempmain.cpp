@@ -220,57 +220,61 @@ class TextureParser{
 
 //------------------------------------------------------------------------------------------------------------------
 class Board: public sf::Drawable{
-  private:
+  protected:
     std::size_t x=0;
     std::size_t y=0;
     std::size_t L=10;
-    Piece data[8][8];
+    Piece*** data;
+    short grabbed_x=-1;
+    short grabbed_y=-1;
     sf::Texture* texture;
     TextureParser* WhiteManager;
     TextureParser* BlackManager;
     sf::Sprite* sprite;
   public:
-
+    //setting up the board
     template <typename T>
     void set_piece(std::size_t x1, std::size_t y1, bool white){
       std::string name = T::get_name();
-      if (white) data[x1-1][y1-1] = T(this->x-L/16+L/8*x1, this->y+L/8*y1, L/8, true , WhiteManager->get_sprite(name));
-      else data[x1-1][y1-1] = T(this->x-L/16+L/8*x1, this->y+L/8*y1, L/8, false , BlackManager->get_sprite(name));
+      delete data[x1][y1];
+      if (white) data[x1][y1] = new T(real_x_from_board_x(x1), real_y_from_board_y(y1), L/8, true , WhiteManager->get_sprite(name));
+      else data[x1][y1] = new T(real_x_from_board_x(x1), real_y_from_board_y(y1), L/8, false , BlackManager->get_sprite(name));
     }
 
     virtual void reset(){
-      set_piece<Rook>(1, 8, true);
-      set_piece<Knight>(2, 8, true);
-      set_piece<Bishop>(3, 8, true);
-      set_piece<Queen>(4, 8, true);
-      set_piece<King>(5, 8, true);
-      set_piece<Bishop>(6, 8, true);
-      set_piece<Knight>(7, 8, true);
-      set_piece<Rook>(8, 8, true);
-      set_piece<Pawn>(0+1, 7, true);
-      set_piece<Pawn>(1+1, 7, true);
-      set_piece<Pawn>(2+1, 7, true);
-      set_piece<Pawn>(3+1, 7, true);
-      set_piece<Pawn>(4+1, 7, true);
-      set_piece<Pawn>(5+1, 7, true);
-      set_piece<Pawn>(6+1, 7, true);
-      set_piece<Pawn>(7+1, 7, true);
-      set_piece<Rook>(1, 1, false);
-      set_piece<Knight>(2, 1, false);
-      set_piece<Bishop>(3, 1, false);
-      set_piece<Queen>(4, 1, false);
-      set_piece<King>(5, 1, false);
-      set_piece<Bishop>(6, 1, false); 
-      set_piece<Knight>(7, 1, false);
-      set_piece<Rook>(8, 1, false);
-      set_piece<Pawn>(0+1, 2, false);
-      set_piece<Pawn>(1+1, 2, false);
-      set_piece<Pawn>(2+1, 2, false);
-      set_piece<Pawn>(3+1, 2, false);
-      set_piece<Pawn>(4+1, 2, false);
-      set_piece<Pawn>(5+1, 2, false);
-      set_piece<Pawn>(6+1, 2, false);
-      set_piece<Pawn>(7+1, 2, false);
+        set_piece<Rook>(0, 7, true);
+      set_piece<Knight>(1, 7, true);
+      set_piece<Bishop>(2, 7, true);
+       set_piece<Queen>(3, 7, true);
+        set_piece<King>(4, 7, true);
+      set_piece<Bishop>(5, 7, true);
+      set_piece<Knight>(6, 7, true);
+        set_piece<Rook>(7, 7, true);
+        set_piece<Pawn>(0, 6, true);
+        set_piece<Pawn>(1, 6, true);
+        set_piece<Pawn>(2, 6, true);
+        set_piece<Pawn>(3, 6, true);
+        set_piece<Pawn>(4, 6, true);
+        set_piece<Pawn>(5, 6, true);
+        set_piece<Pawn>(6, 6, true);
+        set_piece<Pawn>(7, 6, true);
+        set_piece<Rook>(0, 0, false);
+      set_piece<Knight>(1, 0, false);
+      set_piece<Bishop>(2, 0, false);
+       set_piece<Queen>(3, 0, false);
+        set_piece<King>(4, 0, false);
+      set_piece<Bishop>(5, 0, false); 
+      set_piece<Knight>(6, 0, false);
+        set_piece<Rook>(7, 0, false);
+        set_piece<Pawn>(0, 1, false);
+        set_piece<Pawn>(1, 1, false);
+        set_piece<Pawn>(2, 1, false);
+        set_piece<Pawn>(3, 1, false);
+        set_piece<Pawn>(4, 1, false);
+        set_piece<Pawn>(5, 1, false);
+        set_piece<Pawn>(6, 1, false);
+        set_piece<Pawn>(7, 1, false);
+      
     }
 
     virtual void init_sprites(){
@@ -284,17 +288,78 @@ class Board: public sf::Drawable{
     }
 
     Board(std::size_t x, std::size_t y, std::size_t L): texture(), x(x), y(y), L(L){
+      //init data
+      data = new Piece**[8];
+      for(int i = 0; i < 8; ++i){data[i] = new Piece*[8]; for(int J = 0; J < 8; ++J) data[i][J]=new Piece;}
+      //fill sprites
       init_sprites();
+      //fill figures
       reset();
     }
 
-    virtual void update(std::string A, std::string B){}
+
+    //event handling
+    virtual void handle(sf::Event event){
+      switch (event.type)
+      {
+      case sf::Event::MouseButtonPressed:
+        {
+        if(!on_this(event)) break;
+        std::size_t new_x = get_x(event);
+        std::size_t new_y = get_y(event);
+        std::cout<<new_x<<" "<<new_y<<'\n';
+        if(grabbed_x==-1){
+          if(data[new_x][new_y]->is_occupied())
+            {grabbed_x = new_x;grabbed_y = new_y;}
+          std::cout<<"grabbed is "<<grabbed_x<<" "<<grabbed_y<<'\n';
+          std::cout<<"figure was "<<data[new_x][new_y]<<'\n';
+        }
+        else if(data[grabbed_x][grabbed_y]->can_move(new_x-grabbed_x, new_y-grabbed_y)){
+          move_piece(grabbed_x, grabbed_y, new_x, new_y);
+          std::cout<<" moved from: "<<grabbed_x<<" "<<grabbed_y<<'\n';
+          std::cout<<" to: "<<new_x<<" "<<new_y<<'\n';
+          grabbed_x = -1;
+          grabbed_y = -1;
+        }
+        break;
+        }
+      default:
+        break;
+      }
+    }
+    
+    bool on_this(sf::Event event){
+      return ((event.mouseButton.x>x) and (event.mouseButton.x<(x+L)) and (event.mouseButton.y>y) and (event.mouseButton.y<y+L));
+    }
+
+    short get_x(sf::Event event){//assumes that the event is somewhere on board and returns the x of the closest square
+      return short((event.mouseButton.x-x)*8/L+0.5);
+    }
+
+    short get_y(sf::Event event){//assumes that the event is somewhere on board and returns the x of the closest square
+      return short((event.mouseButton.y-y)*8/L+0.5);
+    }
+
+    short real_x_from_board_x(std::size_t x1){
+      return this->x+L/16+L/8*x1;
+    }
+
+    short real_y_from_board_y(std::size_t y1){
+      return this->y+L/8+L/8*y1;
+    }
+
+    virtual void move_piece(std::size_t grabbed_x, std::size_t grabbed_y, std::size_t new_x, std::size_t new_y){
+      delete data[new_x][new_y];
+      data[new_x][new_y]=data[grabbed_x][grabbed_y];
+      data[grabbed_x][grabbed_y]=new Piece;
+      data[new_x][new_y]->move(real_x_from_board_x(new_x), real_y_from_board_y(new_y));
+    }
     
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const {
       target.draw(*sprite, states);
       for (int i=0; i<8; i++){
         for (int j=0; j<8; j++){
-          target.draw(data[i][j], states);
+          target.draw(*data[i][j], states);
         }
       }
     }
@@ -317,7 +382,7 @@ int main()
 
   Piece piece;
 
-  Board board(50, 50, 400);
+  Board* board = new Board(50, 50, 400);
 
   // Main Loop
   while (window.isOpen())
@@ -329,17 +394,24 @@ int main()
       sf::Event event;
       while (window.pollEvent(event))
       {
-          // "close requested" event: we close the window
-          if (event.type == sf::Event::Closed)
+          switch (event.type)
+          {
+          case sf::Event::Closed:
               window.close();
+              break;
+          case sf::Event::MouseButtonPressed:
+              board->handle(event);
+              break;
+          }
       }
       
       // Drawing
-      window.draw(board);
+      window.draw(*board);
       
       // end the current frame
       window.display();
   }
+  delete board;
   return 0;
 }
 //------------------------------------------------------------------------------------------------------------------
