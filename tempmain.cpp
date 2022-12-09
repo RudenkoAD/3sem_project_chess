@@ -71,7 +71,7 @@ class Piece: public sf::Drawable{//a base class for any chess pieces
 //------------------------------------------------------------------------------------------------------------------
 class King final : public Piece{
   public:
-    bool is_occupied() const override{return true;}
+    virtual bool is_occupied() const override{return true;}
     static std::string get_name() {return "King";}
     King():Piece(){}
     King(std::size_t x, std::size_t y, std::size_t L, bool white, sf::Sprite* sprite):Piece(x, y, L, white, sprite){
@@ -90,7 +90,7 @@ class King final : public Piece{
 
 class Queen final : public Piece{
   public:
-    bool is_occupied() const override{return true;}
+    virtual bool is_occupied() const override{return true;}
     static std::string get_name() {return "Queen";}
     Queen():Piece(){}
     Queen(std::size_t x, std::size_t y, std::size_t L, bool white, sf::Sprite* sprite):Piece(x, y, L, white, sprite){
@@ -111,7 +111,7 @@ class Queen final : public Piece{
 
 class Knight final : public Piece {
   public:
-    bool is_occupied() const override{return true;}
+    virtual bool is_occupied() const override{return true;}
     static std::string get_name() {return "Knight";}
     Knight():Piece(){}
     Knight(std::size_t x, std::size_t y, std::size_t L, bool white, sf::Sprite* sprite):Piece(x, y, L, white, sprite){
@@ -130,7 +130,7 @@ class Knight final : public Piece {
 
 class Bishop final : public Piece{
   public:
-    bool is_occupied() const override{return true;}
+    virtual bool is_occupied() const override{return true;}
     static std::string get_name() {return "Bishop";}
     Bishop():Piece(){}
     Bishop(std::size_t x, std::size_t y, std::size_t L, bool white, sf::Sprite* sprite):Piece(x, y, L, white, sprite){
@@ -149,7 +149,7 @@ class Bishop final : public Piece{
 
 class Rook final : public Piece{
   public:
-    bool is_occupied() const override{return true;}
+    virtual bool is_occupied() const override{return true;}
     static std::string get_name() {return "Rook";}
     Rook():Piece(){}
     Rook(std::size_t x, std::size_t y, std::size_t L, bool white, sf::Sprite* sprite):Piece(x, y, L, white, sprite){
@@ -207,7 +207,7 @@ class TextureParser{
       else if (f == "Bishop") r = sf::IntRect(48, 0, 16, 32);
       else if (f == "Queen") r = sf::IntRect(64, 0, 16, 32);
       else if (f == "King") r = sf::IntRect(80, 0, 16, 32);
-      else r = sf::IntRect(0, 0, 80, 32);
+      else r = sf::IntRect(0, 0, 0, 0);
       return new sf::Sprite(*spritesheet, r);
     }
     ~TextureParser(){
@@ -354,7 +354,7 @@ class Board: public sf::Drawable{
       data[grabbed_x][grabbed_y]=new Piece;
       data[new_x][new_y]->move(real_x_from_board_x(new_x), real_y_from_board_y(new_y));
     }
-    
+
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const {
       target.draw(*sprite, states);
       for (int i=0; i<8; i++){
