@@ -9,7 +9,7 @@ sf::Sprite* Nullsprite = new sf::Sprite;
 //------------------------------------------------------------------------------------------------------------------
 class Piece: public sf::Drawable{//a base class for any chess pieces
   protected:
-    bool is_white=true;               //whether the piece is white or black
+    bool white=true;               //whether the piece is white or black
     std::size_t x=0;                  //
     std::size_t y=0;                  //absolute coordinates of the upper-left corner of the piece
     std::size_t L=0;                  //width of the piece
@@ -22,13 +22,14 @@ class Piece: public sf::Drawable{//a base class for any chess pieces
     }
     
     Piece():sprite(new sf::Sprite){}
-    Piece(std::size_t x, std::size_t y, std::size_t L, bool white, sf::Sprite* sprite):x(x), y(y), L(L), is_white(white), sprite(sprite){}
+    Piece(std::size_t x, std::size_t y, std::size_t L, bool white, sf::Sprite* sprite):x(x), y(y), L(L), white(white), sprite(sprite){}
 
     //getters to be overridden
+    virtual bool is_white() const {return white;}
     virtual bool is_occupied() const {return false;} //returns whether a piece exists, the base class returns false
     virtual std::size_t get_pts() const {return 0;}
     virtual bool can_move(std::size_t h, std::size_t v) const {return false;}
-    virtual bool can_eat(std::size_t h, std::size_t v) const {return false;}
+    virtual bool can_eat(std::size_t h, std::size_t v, bool white) const {return false;}
     static std::string get_name() {return "None";}
     //methods to draw the sprite
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const {
@@ -43,7 +44,7 @@ class Piece: public sf::Drawable{//a base class for any chess pieces
     }
 
     Piece& operator=(Piece& other){
-      is_white=other.is_white;
+      white=other.white;
       x=other.x;
       y=other.y;
       L=other.L;
@@ -54,7 +55,7 @@ class Piece: public sf::Drawable{//a base class for any chess pieces
     }
 
     Piece& operator=(Piece&& other){
-      is_white=other.is_white;
+      white=other.white;
       x=other.x;
       y=other.y;
       L=other.L;
@@ -71,7 +72,7 @@ class Piece: public sf::Drawable{//a base class for any chess pieces
 //------------------------------------------------------------------------------------------------------------------
 class King final : public Piece{
   public:
-    virtual bool is_occupied() const override{return true;}
+    bool is_occupied() const override{return true;}
     static std::string get_name() {return "King";}
     King():Piece(){}
     King(std::size_t x, std::size_t y, std::size_t L, bool white, sf::Sprite* sprite):Piece(x, y, L, white, sprite){
@@ -83,14 +84,14 @@ class King final : public Piece{
       if(abs(h)<=1 and abs(v)<=1) return true;
       return false;
     }
-    bool can_eat(std::size_t h, std::size_t v) const override{
-      return can_move(h,v);
+    bool can_eat(std::size_t h, std::size_t v, bool white1) const override{
+      return can_move(h,v) and (white != white1);
     }
 };
 
 class Queen final : public Piece{
   public:
-    virtual bool is_occupied() const override{return true;}
+    bool is_occupied() const override{return true;}
     static std::string get_name() {return "Queen";}
     Queen():Piece(){}
     Queen(std::size_t x, std::size_t y, std::size_t L, bool white, sf::Sprite* sprite):Piece(x, y, L, white, sprite){
@@ -104,14 +105,14 @@ class Queen final : public Piece{
       if(abs(h)==abs(v)) return true;
       return false;
     }
-    bool can_eat(std::size_t h, std::size_t v) const override{
-      return can_move(h,v);
+    bool can_eat(std::size_t h, std::size_t v, bool white1) const override{
+      return can_move(h,v) and (white != white1);
     }
 };
 
 class Knight final : public Piece {
   public:
-    virtual bool is_occupied() const override{return true;}
+    bool is_occupied() const override{return true;}
     static std::string get_name() {return "Knight";}
     Knight():Piece(){}
     Knight(std::size_t x, std::size_t y, std::size_t L, bool white, sf::Sprite* sprite):Piece(x, y, L, white, sprite){
@@ -123,14 +124,14 @@ class Knight final : public Piece {
       if((abs(h)==1) and (abs(v)==2)) return true;
       return false;
     }
-    bool can_eat(std::size_t h, std::size_t v) const override{
-      return can_move(h,v);
+    bool can_eat(std::size_t h, std::size_t v, bool white1) const override{
+      return can_move(h,v) and (white != white1);
     }
 };
 
 class Bishop final : public Piece{
   public:
-    virtual bool is_occupied() const override{return true;}
+    bool is_occupied() const override{return true;}
     static std::string get_name() {return "Bishop";}
     Bishop():Piece(){}
     Bishop(std::size_t x, std::size_t y, std::size_t L, bool white, sf::Sprite* sprite):Piece(x, y, L, white, sprite){
@@ -142,14 +143,14 @@ class Bishop final : public Piece{
       if(abs(h)==abs(v)) return true;
       return false;
     }
-    bool can_eat(std::size_t h, std::size_t v) const override{
-      return can_move(h,v);
+    bool can_eat(std::size_t h, std::size_t v, bool white1) const override{
+      return can_move(h,v) and (white != white1);
     }
 };
 
 class Rook final : public Piece{
   public:
-    virtual bool is_occupied() const override{return true;}
+    bool is_occupied() const override{return true;}
     static std::string get_name() {return "Rook";}
     Rook():Piece(){}
     Rook(std::size_t x, std::size_t y, std::size_t L, bool white, sf::Sprite* sprite):Piece(x, y, L, white, sprite){
@@ -162,8 +163,8 @@ class Rook final : public Piece{
       if(v==0) return true;
       return false;
     }
-    bool can_eat(std::size_t h, std::size_t v) const override{
-      return can_move(h,v);
+    bool can_eat(std::size_t h, std::size_t v, bool white1) const override{
+      return can_move(h,v) and (white != white1);
     }
 };
 
@@ -177,12 +178,13 @@ class Pawn final : public Piece{
     }
     std::size_t get_pts()  {return 1;}
     bool can_move(std::size_t x, std::size_t y) const override{
-      if((x==0) and (y==-1) and is_white) return true;
-      if((x==0) and (y==1) and (!is_white)) return true;
+      if((x==0) and (y==-1) and white) return true;
+      if((x==0) and (y==1) and (!white)) return true;
       return false;
     }
-    bool can_eat(std::size_t h, std::size_t v) const override{
-      if((h==1) and (abs(v)==1)) return true;
+    bool can_eat(std::size_t h, std::size_t v, bool white1) const override{
+      if((v==1) and (abs(h)==1) and (!white) and (white != white1)) return true;
+      if((v==-1) and (abs(h)==1) and (white) and (white != white1)) return true;
       return false;
     }
 };
@@ -231,6 +233,7 @@ class Board: public sf::Drawable{
     TextureParser* WhiteManager;
     TextureParser* BlackManager;
     sf::Sprite* sprite;
+    bool white_is_moving=true;
   public:
     //setting up the board
     template <typename T>
@@ -303,23 +306,29 @@ class Board: public sf::Drawable{
       switch (event.type)
       {
       case sf::Event::MouseButtonPressed:
+        if(event.mouseButton.button == sf::Mouse::Left)
         {
         if(!on_this(event)) break;
         std::size_t new_x = get_x(event);
         std::size_t new_y = get_y(event);
-        std::cout<<new_x<<" "<<new_y<<'\n';
-        if(grabbed_x==-1){
-          if(data[new_x][new_y]->is_occupied())
-            {grabbed_x = new_x;grabbed_y = new_y;}
-          std::cout<<"grabbed is "<<grabbed_x<<" "<<grabbed_y<<'\n';
-          std::cout<<"figure was "<<data[new_x][new_y]<<'\n';
+        bool white_color = data[new_x][new_y]->is_white();
+        if(data[new_x][new_y]->is_occupied()){
+          if (grabbed_x==-1){if(white_is_moving==white_color){grabbed_x = new_x;grabbed_y = new_y;}}
+          else if (data[grabbed_x][grabbed_y]->can_eat(new_x-grabbed_x, new_y-grabbed_y, white_color)){
+            move_piece(grabbed_x, grabbed_y, new_x, new_y);
+            grabbed_x = -1;
+            grabbed_y = -1;
+          }
+          else if(white_is_moving==white_color){grabbed_x = new_x;grabbed_y = new_y;}
         }
-        else if(data[grabbed_x][grabbed_y]->can_move(new_x-grabbed_x, new_y-grabbed_y)){
-          move_piece(grabbed_x, grabbed_y, new_x, new_y);
-          std::cout<<" moved from: "<<grabbed_x<<" "<<grabbed_y<<'\n';
-          std::cout<<" to: "<<new_x<<" "<<new_y<<'\n';
-          grabbed_x = -1;
-          grabbed_y = -1;
+        else {
+          if (grabbed_x==-1) break;
+          if (data[grabbed_x][grabbed_y]->can_move(new_x-grabbed_x, new_y-grabbed_y)){
+            move_piece(grabbed_x, grabbed_y, new_x, new_y);
+            grabbed_x = -1;
+            grabbed_y = -1;
+          }
+          else {grabbed_x =-1; grabbed_y=-1;}
         }
         break;
         }
@@ -353,6 +362,7 @@ class Board: public sf::Drawable{
       data[new_x][new_y]=data[grabbed_x][grabbed_y];
       data[grabbed_x][grabbed_y]=new Piece;
       data[new_x][new_y]->move(real_x_from_board_x(new_x), real_y_from_board_y(new_y));
+      white_is_moving=!white_is_moving;
     }
 
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const {
